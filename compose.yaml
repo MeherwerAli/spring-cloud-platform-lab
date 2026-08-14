@@ -1,0 +1,56 @@
+name: spring-cloud-platform-lab
+
+x-service-build: &service-build
+  context: .
+  dockerfile: Dockerfile
+
+x-service-environment: &service-environment
+  EUREKA_URL: http://discovery-server:8761/eureka/
+
+services:
+  discovery-server:
+    build:
+      <<: *service-build
+      args:
+        MODULE: discovery-server
+    ports:
+      - "8761:8761"
+
+  inventory-service:
+    build:
+      <<: *service-build
+      args:
+        MODULE: inventory-service
+    depends_on:
+      - discovery-server
+    environment:
+      <<: *service-environment
+    ports:
+      - "8081:8081"
+
+  order-service:
+    build:
+      <<: *service-build
+      args:
+        MODULE: order-service
+    depends_on:
+      - discovery-server
+      - inventory-service
+    environment:
+      <<: *service-environment
+    ports:
+      - "8082:8082"
+
+  api-gateway:
+    build:
+      <<: *service-build
+      args:
+        MODULE: api-gateway
+    depends_on:
+      - discovery-server
+      - inventory-service
+      - order-service
+    environment:
+      <<: *service-environment
+    ports:
+      - "8080:8080"
